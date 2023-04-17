@@ -37,18 +37,18 @@ client.on("interactionCreate", async message => {
 	if (message.commandName === "embedtest") {
                 
         const embed = new EmbedBuilder()
-            .setTitle("This could be a leaderboard")
+            .setTitle("Question title")
             .setDescription("Top 10 points:")
             .setColor(0x00AE86);
     
         
                  
            
-            embed.addFields({ name: "UP number: ", value: "10 points", inline: true});
-			embed.addFields({ name: "UP number 2: ", value: "12 points", inline: true});
-			embed.addFields({ name: "UP number 3: ", value: "1 points", inline: true});
-			embed.addFields({ name: "UP number 4: ", value: "0 points", inline: true});
-			embed.addFields({ name: "UP number 5: ", value: "23 points", inline: true});
+            embed.addFields({ name: "A: answer1", value: "10 points", inline: true});
+			embed.addFields({ name: "b: answer2 : ", value: "12 points", inline: true});
+			embed.addFields({ name: "c: answer 3: ", value: "1 points", inline: true});
+			embed.addFields({ name: "d: answer 4: ", value: "0 points", inline: true});
+			
             //embed.setDescription(`<@${data.userId}> ${data.points} points`);
         
         message.reply({ embeds: [embed] });
