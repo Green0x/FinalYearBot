@@ -6,6 +6,8 @@ npm init
 
 npm install discord.js  
 
+Change secret.json to your server
+
 node slashCommands.js (if running for the first time)  
 
 node bot.js
