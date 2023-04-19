@@ -1,8 +1,15 @@
-actions:
-  action: Send notification to Discord
-  type: DISCORD
-  notification_url: >-
-    https://discordapp.com/api/webhooks/45379791241512375553/zi3NxdcB6yFfa215n6UN8kece312392-u1BpaBUc2CYWoBMrrIJpK7t5lBr5nxFUqc9v9eKX8
+quiz:
+  question1: Type your question here
+    a1: answer 1
+    a2: answer 2
+    a3: answer 3
+    a4: answer 4
+
+  question2: Question 2
+    a1: ans1
+    a2: ans2
+    a3: ans3
+    a4: ans4
   content: '[#$BUDDY_EXECUTION_ID] $BUDDY_PIPELINE_NAME by $BUDDY_INVOKER_NAME'
   newt: test
 newKey: testval:test1

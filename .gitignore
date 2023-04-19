@@ -2,3 +2,5 @@ node_modules/
 secret.json
 package-lock.json
 package.json
+database.sqlite
+quizQuestions.yml

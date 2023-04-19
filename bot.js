@@ -1,8 +1,12 @@
 const config = require("./config.json");
 const secret = require("./secret.json");
 const yaml = require('js-yaml');
+const SQLite = require('better-sqlite3');
+const sql = new SQLite('./database.sqlite');
 const https = require('https');
 const fs = require('fs');
+
+const db = require('./databaseInit');
 
 const { EmbedBuilder } = require('discord.js');
 const { Client, GatewayIntentBits } = require('discord.js');
@@ -26,7 +30,8 @@ client.on("ready", () => {
     console.log(`Bot Activated! Logged in as: ${client.user.tag}`);
     console.log("You are running version: " + config.botVersion + " of the FYPBot");
     console.log("");
-    
+    db.initDatabase();
+    client.getUser = sql.prepare("SELECT * FROM users WHERE userId = ?");
 });
 
 
@@ -58,12 +63,10 @@ client.on("interactionCreate", async message => {
 
     }
 
-    if (message.commandName === "uploadquiz"){
-        let quizAttach = message.options.getAttachment("ymlfile");
-        let quizName = message.options.getString("quizname");
-
-        if(fs.existsSync(message.user.id.toString().concat('.yml'))){   // Set this to quiz name
-            console.log("it exists")
+    if (message.commandName === "startquiz"){
+        let quizId = message.options.getNumber("id");
+        //let score = client.getScore
+         /*
             const fileContents = fs.readFileSync(message.user.id.toString().concat('.yml'), 'utf-8');
            
             const doc = yaml.load(fileContents);
@@ -74,11 +77,25 @@ client.on("interactionCreate", async message => {
             const yamlStr = yaml.dump(data);
             fs.writeFileSync('example.yml', yamlStr, 'utf8');
             //console.log(doc['actions']['type'])
-            message.reply("test");
-        }else{
-            console.log("Quiz does not a duplicate. Donloading...")
+            */
+    }
+
+
+
+
+    if (message.commandName === "uploadquiz"){
+        let quizAttach = message.options.getAttachment("ymlfile");
+        let quizName = message.options.getString("quizname");
+
+        if(fs.existsSync(quizName.concat('.yml'))){  
+            console.log("Quiz is a duplicate. Sending error message")
+           
+            message.reply("You cannot upload a quiz with the same name!");
             
-            const file = fs.createWriteStream(quizName + ".yml");
+        }else{
+            console.log("Quiz is not a duplicate. Downloading...")
+            
+            const file = fs.createWriteStream(quizName.concat('.yml'));
             const request = https.get(quizAttach.url, function(response) {
                 response.pipe(file);
 

@@ -17,21 +17,11 @@ const commands = [
 								title.setName("quizname")
 									.setRequired(true)
 									.setDescription("The title of your quiz")),
-	/*								
-	new SlashCommandBuilder().setName('createquiz').setDescription('Create a quiz!')	
-							.addStringOption(quizTitle =>
-								quizTitle.setName("title")
-									.setDescription("Title of your quiz")
-									.setRequired(true))
-							.addStringOption(quizDesc =>
-								quizDesc.setName("description")
-									.setDescription("Description of your quiz")
-									.setRequired(true))
-							.addNumberOption(quizNumOfQs =>
-								quizNumOfQs.setName("numberofquestions")
-									.setDescription("How many questions are in your quiz")
+	new SlashCommandBuilder().setName('startquiz').setDescription('Starts a quiz')
+							.addNumberOption(quizid =>
+								quizid.setName("id")
+									.setDescription("Quiz ID")
 									.setRequired(true)),
-									*/
 						
 ]
 	.map(command => command.toJSON());
