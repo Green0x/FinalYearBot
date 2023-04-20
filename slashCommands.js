@@ -22,6 +22,11 @@ const commands = [
 								quizid.setName("id")
 									.setDescription("Quiz ID")
 									.setRequired(true)),
+	new SlashCommandBuilder().setName('listquiz').setDescription('Lists a users quizzes')
+							.addUserOption(user =>
+								user.setName("username")
+									.setRequired(true)
+									.setDescription("Which users quizzes do you want to see")),								
 						
 ]
 	.map(command => command.toJSON());
