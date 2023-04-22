@@ -1,0 +1,41 @@
+- numberOfQuestions: 5
+
+- question: "What type of system is the Stack?"
+  choices:
+    - "FIFO"
+    - "LIFO"
+    - "FOFI"
+    - "LOFI"
+  answer: 2
+
+- question: "What type of system is a Queue?"
+  choices:
+    - "LIFO"
+    - "FIFO"
+    - "YEYO"
+    - "PEPO"
+  answer: 1
+
+- question: "Is C a programming language?"
+  choices:
+    - "No"
+    - "Maybe"
+    - "I have no idea"
+    - "Yes"
+  answer: 4
+
+- question: "Which of these is a type of data structure"
+  choices:
+    - "Pascal"
+    - ".Exe file"
+    - "Linked list"
+    - ".Png file"
+  answer: 3
+
+- question: "What animal is python named after"
+  choices:
+    - "Crab"
+    - "Snake"
+    - "Elephant"
+    - "Duck"
+  answer: 2

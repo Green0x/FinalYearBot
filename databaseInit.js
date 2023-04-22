@@ -7,10 +7,8 @@ function initDatabase(){
     if(!table['count(*)']) {
         // If the table isn't there, create it and setup the database correctly.
         sql.prepare("CREATE TABLE users (userId INTEGER PRIMARY KEY, numberOfQuizCreated INTEGER);").run();
-        sql.prepare("CREATE TABLE quiz (uniqueID INTEGER PRIMARY KEY, quizName TEXT, quizOwner INTEGER);").run();
-               
+        sql.prepare("CREATE TABLE quiz (uniqueID INTEGER PRIMARY KEY, quizName TEXT, quizOwner INTEGER);").run();         
     }
-    
 }
 
 module.exports = { initDatabase };

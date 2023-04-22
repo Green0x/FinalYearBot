@@ -3,13 +3,12 @@ const secret = require("./secret.json");
 const yaml = require('js-yaml');
 const SQLite = require('better-sqlite3');
 const sql = new SQLite('./database.sqlite');
-//const database = new SQLite('database.sqlite');
 const https = require('https');
 const fs = require('fs');
 
 const db = require('./databaseInit');
 
-const { EmbedBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { Client, GatewayIntentBits } = require('discord.js');
 const { get } = require("http");
 const client = new Client({ intents: [
@@ -30,13 +29,15 @@ const client = new Client({ intents: [
 client.on("ready", () => {
     
     console.log(`Bot Activated! Logged in as: ${client.user.tag}`);
-    console.log("You are running version: " + config.botVersion + " of the FYPBot");
-    console.log("");
+    console.log("Welcome to the Final Year Project Bot");
     db.initDatabase();
-    console.log("inited")
+    console.log("Database initialised")
+    
     
 });
-
+function startQuiz(message) {
+    
+}
 // Check for command inputs
 client.on("interactionCreate", async message => {
     if (message.commandName === "ping") {
@@ -83,41 +84,108 @@ client.on("interactionCreate", async message => {
         
         
     }
+    let correctAnswer = 0;
+    if (message.isButton()) {
+        // Get the message and button
+        const message2 = message.message;
+        const component = message.component;
+    
+        // Check if the button pressed is correct
+        if (component.customId === 'btnA') {
+            if (correctAnswer === 0) {
+                message2.edit('right answer');
+              }else{
+                message2.edit('wrong answer');
+              }
+        }
+        if (component.customId === 'btnB') {
+            if (correctAnswer === 1) {
+                message2.edit('right answer');
+              }else{
+                message2.edit('wrong answer');
+              }
+        }
+        if (component.customId === 'btnC') {
+            if (correctAnswer === 2) {
+                message2.edit('right answer');
+              }else{
+                message2.edit('wrong answer');
+              }
+        }
+        if (component.customId === 'btnD') {
+            if (correctAnswer === 3) {
+                message2.edit('right answer');
+              }else{
+                message2.edit('wrong answer');
+              }
+        }
+      }
 
     if (message.commandName === "startquiz"){
         let quizId = message.options.getNumber("id");
-        let quizId2 = quizId.toString();
         
-        let user = message.user.id;
+        const getQuiz = sql.prepare("SELECT * FROM quiz WHERE uniqueId = ?");
         
-        //console.log(info.changes)
-        //client.getScore = sql.prepare("SELECT * FROM quiz WHERE quizOwner = ?;");                           
-        //client.setScore = sql.prepare("INSERT OR REPLACE INTO quiz (quizName, quizOwner) VALUES (@quizName, @quizOwner);");
-        /*
-        let quizOwner = client.getScore.get(user);
-        if (!quizOwner) {
-            quizOwner = { quizName: quizId, quizOwner: user }
-        }
-        
-        client.setScore.run("test", quizOwner)
-        //let user = message.member.id;
-        //console.log(user)
-        */
-        message.reply("added")
+        const btnA = new ButtonBuilder()
+			.setCustomId('btnA')
+			.setLabel('A')
+			.setStyle(ButtonStyle.Secondary);
+        const btnB = new ButtonBuilder()
+			.setCustomId('btnB')
+			.setLabel('B')
+			.setStyle(ButtonStyle.Secondary);
+        const btnC = new ButtonBuilder()
+			.setCustomId('btnC')
+			.setLabel('C')
+			.setStyle(ButtonStyle.Secondary);
+        const btnD = new ButtonBuilder()
+			.setCustomId('btnD')
+			.setLabel('D')
+			.setStyle(ButtonStyle.Secondary);
 
-        //let score = client.getScore
-         /*
-            const fileContents = fs.readFileSync(message.user.id.toString().concat('.yml'), 'utf-8');
-           
-            const doc = yaml.load(fileContents);
-            //doc.newKey = 'testval:test1';
+        const quizEmbed = new EmbedBuilder()
+        quizEmbed.setColor(16711680)
+
+        const row = new ActionRowBuilder()
+        row.addComponents(btnA, btnB, btnC, btnD);
+
+        let quiz = getQuiz.get(quizId);
+        const fileContents = fs.readFileSync(quiz.quizName.concat('.yml'), 'utf-8');
+        const doc = yaml.load(fileContents);
+        
+        quizEmbed.setTitle(quiz.quizName)
+        let i = 0;
+        const interval = setInterval(() => {
+            if (i === 15) {
+                // Time's up stop interval
+                console.log("Times up");
+                clearInterval(interval);
+              } else{
+                
+                console.log("timers not up");
+              }
+              i++;
+        }, 1000);
+
+        for (let x = 0; x < doc[0].numberOfQuestions; x++) {
             
             
-            //doc.quiz.name = 'quizy'; 
-            const yamlStr = yaml.dump(data);
-            fs.writeFileSync('example.yml', yamlStr, 'utf8');
-            //console.log(doc['actions']['type'])
-            */
+        }
+        quizEmbed.setDescription(doc[1].question)
+        let answer = doc[1].answer
+        quizEmbed.addFields({ name: 'A', value: doc[1].choices[0], inline: false })
+        quizEmbed.addFields({ name: 'B', value: doc[1].choices[1], inline: false })
+        quizEmbed.addFields({ name: 'C', value: doc[1].choices[2], inline: false })
+        quizEmbed.addFields({ name: 'D', value: doc[1].choices[3], inline: false })
+        correctAnswer = answer - 1;
+        
+        
+        message.reply({ embeds: [quizEmbed], components: [row] })
+        setTimeout(() => {
+            message.channel.send("test")
+        }, 10000);
+        
+
     }
 
 
@@ -128,7 +196,7 @@ client.on("interactionCreate", async message => {
         let quizName = message.options.getString("quizname");
 
         // Check for and remove any punctuation in the file name
-        let punctuation = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]/g;
+        let punctuation = /[!"#'%()*+,-./:;$&<=>?@[\]^_`{|}~]/g;
         let quizNameClean = quizName.replace(punctuation, '');
         
         
@@ -138,19 +206,18 @@ client.on("interactionCreate", async message => {
             message.reply("You cannot upload a quiz with the same name!");
             
         }else{
-            console.log("Quiz is not a duplicate. Downloading...")
-            
+            console.log("Quiz is not a duplicate. Downloading...");
+            // Creates dummy file with same name as quiz name
             const file = fs.createWriteStream(quizNameClean.concat('.yml'));
             const request = https.get(quizAttach.url, function(response) {
-                response.pipe(file);
-                file.on("finish", () => {
-                    file.close();
-                    console.log(quizNameClean + ".yml, has been downloaded")
-                })
+                response.pipe(file); // Stream the data into our dummy file
+
+                file.on("finish", () => { 
+                    file.close(); // Once file is downloaded we close it
+                    console.log(quizNameClean + ".yml, has been downloaded");
+                });
             });
-
-            console.log("Updating Database...")
-
+            
             // Setup each SQL statement we will be using
             const insertQuiz = sql.prepare("INSERT INTO quiz (quizName, quizOwner) VALUES (?, ?);");
             const insertUser = sql.prepare("INSERT OR REPLACE INTO users (userId, numberOfQuizCreated) VALUES (?, ?);");
@@ -170,8 +237,6 @@ client.on("interactionCreate", async message => {
 
             // Update users table with number of quizs created + 1
             insertUser.run(message.user.id, user.numberOfQuizCreated += 1)
-            
-            console.log("Database updated successfully")
 
             let getQuizID = getQuiz.get(quizNameClean)
             message.reply("Your quiz: " + quizNameClean + " was successfully uploaded!" + ` Your quiz ID is: ${getQuizID.uniqueID}`);
