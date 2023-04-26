@@ -35,9 +35,76 @@ client.on("ready", () => {
     
     
 });
-function startQuiz(message) {
+//let numOfQuizLeft = 0;
+function startQuiz(message, quizId, numOfQuizLeft) {
+    if (numOfQuizLeft !== 0) {
+        const getQuiz = sql.prepare("SELECT * FROM quiz WHERE uniqueId = ?");
+        // Build the buttons
+        const btnA = new ButtonBuilder()
+			.setCustomId('btnA')
+			.setLabel('A')
+			.setStyle(ButtonStyle.Secondary);
+        const btnB = new ButtonBuilder()
+			.setCustomId('btnB')
+			.setLabel('B')
+			.setStyle(ButtonStyle.Secondary);
+        const btnC = new ButtonBuilder()
+			.setCustomId('btnC')
+			.setLabel('C')
+			.setStyle(ButtonStyle.Secondary);
+        const btnD = new ButtonBuilder()
+			.setCustomId('btnD')
+			.setLabel('D')
+			.setStyle(ButtonStyle.Secondary);
+        // Build the quiz display
+        const quizEmbed = new EmbedBuilder()
+        quizEmbed.setColor(16711680)
+        // Build ActionRow to add buttons to message
+        const row = new ActionRowBuilder()
+        row.addComponents(btnA, btnB, btnC, btnD);
+
+        // Read from quiz data
+        let quiz = getQuiz.get(quizId);
+        const fileContents = fs.readFileSync(quiz.quizName.concat('.yml'), 'utf-8');
+        const doc = yaml.load(fileContents);
+        
+        // Sets Embed title to the name of the quiz
+        quizEmbed.setTitle(quiz.quizName)
+        // Starts a stopwatch and counts to 15 seconds, then moves onto the next question
+        let i = 0;
+        const interval = setInterval(() => {
+            if (i === 15) {
+                // Stop quiz after 15 seconds
+                console.log("Times up");
+                message.channel.send("Times up!");
+                numOfQuizLeft = numOfQuizLeft - 1;
+                clearInterval(interval);
+                startQuiz(message, quizId, numOfQuizLeft)
+              } else{
+                
+                console.log("timers not up");
+              }
+              i++;
+        }, 1000);
+
+
+        quizEmbed.setDescription(doc[numOfQuizLeft].question)
+        let answer = doc[numOfQuizLeft].answer
+        quizEmbed.addFields({ name: 'A', value: doc[numOfQuizLeft].choices[0], inline: false })
+        quizEmbed.addFields({ name: 'B', value: doc[numOfQuizLeft].choices[1], inline: false })
+        quizEmbed.addFields({ name: 'C', value: doc[numOfQuizLeft].choices[2], inline: false })
+        quizEmbed.addFields({ name: 'D', value: doc[numOfQuizLeft].choices[3], inline: false })
+        correctAnswer = answer - 1;
+        
+        
+        message.channel.send({ embeds: [quizEmbed], components: [row] })
+    }else{
+        message.channel.send("Quiz has ended!")
+    }
     
+        
 }
+
 // Check for command inputs
 client.on("interactionCreate", async message => {
     if (message.commandName === "ping") {
@@ -87,103 +154,51 @@ client.on("interactionCreate", async message => {
     let correctAnswer = 0;
     if (message.isButton()) {
         // Get the message and button
-        const message2 = message.message;
+        const sentMessage = message.message;
         const component = message.component;
     
         // Check if the button pressed is correct
         if (component.customId === 'btnA') {
             if (correctAnswer === 0) {
-                message2.edit('right answer');
+                sentMessage.edit('right answer');
               }else{
-                message2.edit('wrong answer');
+                sentMessage.edit('wrong answer');
               }
         }
         if (component.customId === 'btnB') {
             if (correctAnswer === 1) {
-                message2.edit('right answer');
+                sentMessage.edit('right answer');
               }else{
-                message2.edit('wrong answer');
+                sentMessage.edit('wrong answer');
               }
         }
         if (component.customId === 'btnC') {
             if (correctAnswer === 2) {
-                message2.edit('right answer');
+                sentMessage.edit('right answer');
               }else{
-                message2.edit('wrong answer');
+                sentMessage.edit('wrong answer');
               }
         }
         if (component.customId === 'btnD') {
             if (correctAnswer === 3) {
-                message2.edit('right answer');
+                sentMessage.edit('right answer');
               }else{
-                message2.edit('wrong answer');
+                sentMessage.edit('wrong answer');
               }
         }
       }
 
     if (message.commandName === "startquiz"){
         let quizId = message.options.getNumber("id");
-        
+
         const getQuiz = sql.prepare("SELECT * FROM quiz WHERE uniqueId = ?");
-        
-        const btnA = new ButtonBuilder()
-			.setCustomId('btnA')
-			.setLabel('A')
-			.setStyle(ButtonStyle.Secondary);
-        const btnB = new ButtonBuilder()
-			.setCustomId('btnB')
-			.setLabel('B')
-			.setStyle(ButtonStyle.Secondary);
-        const btnC = new ButtonBuilder()
-			.setCustomId('btnC')
-			.setLabel('C')
-			.setStyle(ButtonStyle.Secondary);
-        const btnD = new ButtonBuilder()
-			.setCustomId('btnD')
-			.setLabel('D')
-			.setStyle(ButtonStyle.Secondary);
-
-        const quizEmbed = new EmbedBuilder()
-        quizEmbed.setColor(16711680)
-
-        const row = new ActionRowBuilder()
-        row.addComponents(btnA, btnB, btnC, btnD);
-
         let quiz = getQuiz.get(quizId);
         const fileContents = fs.readFileSync(quiz.quizName.concat('.yml'), 'utf-8');
         const doc = yaml.load(fileContents);
-        
-        quizEmbed.setTitle(quiz.quizName)
-        let i = 0;
-        const interval = setInterval(() => {
-            if (i === 15) {
-                // Time's up stop interval
-                console.log("Times up");
-                clearInterval(interval);
-              } else{
-                
-                console.log("timers not up");
-              }
-              i++;
-        }, 1000);
 
-        for (let x = 0; x < doc[0].numberOfQuestions; x++) {
-            
-            
-        }
-        quizEmbed.setDescription(doc[1].question)
-        let answer = doc[1].answer
-        quizEmbed.addFields({ name: 'A', value: doc[1].choices[0], inline: false })
-        quizEmbed.addFields({ name: 'B', value: doc[1].choices[1], inline: false })
-        quizEmbed.addFields({ name: 'C', value: doc[1].choices[2], inline: false })
-        quizEmbed.addFields({ name: 'D', value: doc[1].choices[3], inline: false })
-        correctAnswer = answer - 1;
+        numOfQuizLeft = doc[0].numberOfQuestions
+        startQuiz(message, quizId, numOfQuizLeft)
         
-        
-        message.reply({ embeds: [quizEmbed], components: [row] })
-        setTimeout(() => {
-            message.channel.send("test")
-        }, 10000);
         
 
     }
