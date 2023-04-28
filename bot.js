@@ -5,6 +5,7 @@ const SQLite = require('better-sqlite3');
 const sql = new SQLite('./database.sqlite');
 const https = require('https');
 const fs = require('fs');
+const QuickChart = require('quickchart-js');
 
 const db = require('./databaseInit');
 
@@ -35,10 +36,9 @@ client.on("ready", () => {
     
     
 });
-//let numOfQuizLeft = 0;
+
 function startQuiz(message, quizId, numOfQuizLeft) {
     if (numOfQuizLeft !== 0) {
-        const getQuiz = sql.prepare("SELECT * FROM quiz WHERE uniqueId = ?");
         // Build the buttons
         const btnA = new ButtonBuilder()
 			.setCustomId('btnA')
@@ -60,13 +60,14 @@ function startQuiz(message, quizId, numOfQuizLeft) {
         const quizEmbed = new EmbedBuilder()
         quizEmbed.setColor(16711680)
         // Build ActionRow to add buttons to message
-        const row = new ActionRowBuilder()
-        row.addComponents(btnA, btnB, btnC, btnD);
+        const btnRow = new ActionRowBuilder()
+        btnRow.addComponents(btnA, btnB, btnC, btnD);
 
         // Read from quiz data
+        const getQuiz = sql.prepare("SELECT * FROM quiz WHERE uniqueId = ?");
         let quiz = getQuiz.get(quizId);
         const fileContents = fs.readFileSync(quiz.quizName.concat('.yml'), 'utf-8');
-        const doc = yaml.load(fileContents);
+        const yamlFile = yaml.load(fileContents);
         
         // Sets Embed title to the name of the quiz
         quizEmbed.setTitle(quiz.quizName)
@@ -74,30 +75,29 @@ function startQuiz(message, quizId, numOfQuizLeft) {
         let i = 0;
         const interval = setInterval(() => {
             if (i === 15) {
-                // Stop quiz after 15 seconds
-                console.log("Times up");
-                message.channel.send("Times up!");
+                // Stop quiz after 15 seconds               
                 numOfQuizLeft = numOfQuizLeft - 1;
                 clearInterval(interval);
+                
                 startQuiz(message, quizId, numOfQuizLeft)
               } else{
-                
-                console.log("timers not up");
+                // Continue
               }
               i++;
         }, 1000);
 
 
-        quizEmbed.setDescription(doc[numOfQuizLeft].question)
-        let answer = doc[numOfQuizLeft].answer
-        quizEmbed.addFields({ name: 'A', value: doc[numOfQuizLeft].choices[0], inline: false })
-        quizEmbed.addFields({ name: 'B', value: doc[numOfQuizLeft].choices[1], inline: false })
-        quizEmbed.addFields({ name: 'C', value: doc[numOfQuizLeft].choices[2], inline: false })
-        quizEmbed.addFields({ name: 'D', value: doc[numOfQuizLeft].choices[3], inline: false })
+        quizEmbed.setDescription(yamlFile[numOfQuizLeft].question)
+        let answer = yamlFile[numOfQuizLeft].answer
+        console.log(answer)
+        quizEmbed.addFields({ name: 'A', value: yamlFile[numOfQuizLeft].choices[0], inline: false })
+        quizEmbed.addFields({ name: 'B', value: yamlFile[numOfQuizLeft].choices[1], inline: false })
+        quizEmbed.addFields({ name: 'C', value: yamlFile[numOfQuizLeft].choices[2], inline: false })
+        quizEmbed.addFields({ name: 'D', value: yamlFile[numOfQuizLeft].choices[3], inline: false })
         correctAnswer = answer - 1;
         
         
-        message.channel.send({ embeds: [quizEmbed], components: [row] })
+        message.channel.send({ embeds: [quizEmbed], components: [btnRow] }).then(msg => setTimeout(() => msg.delete(), 15000));
     }else{
         message.channel.send("Quiz has ended!")
     }
@@ -113,11 +113,6 @@ client.on("interactionCreate", async message => {
 
     }
 	
-	if (message.commandName === "embedtest") {
-       
-       
-
-    }
 
     if(message.commandName === "listquiz"){
         let userName = message.options.getUser("username")
@@ -151,37 +146,45 @@ client.on("interactionCreate", async message => {
         
         
     }
-    let correctAnswer = 0;
+    
     if (message.isButton()) {
         // Get the message and button
         const sentMessage = message.message;
         const component = message.component;
     
-        // Check if the button pressed is correct
+        const getUser = sql.prepare("SELECT * FROM users WHERE userId = ?");
+        const addPoints = sql.prepare("UPDATE users SET points = ? WHERE userId = ?");
+        let user = getUser.get(message.user.id)
+
+        
         if (component.customId === 'btnA') {
             if (correctAnswer === 0) {
-                sentMessage.edit('right answer');
+                addPoints.run(user.points + 1, message.user.id)
+                sentMessage.edit('Correct Answer');
               }else{
                 sentMessage.edit('wrong answer');
               }
         }
         if (component.customId === 'btnB') {
             if (correctAnswer === 1) {
-                sentMessage.edit('right answer');
+                addPoints.run(user.points + 1, message.user.id)
+                sentMessage.edit('Correct Answer');
               }else{
                 sentMessage.edit('wrong answer');
               }
         }
         if (component.customId === 'btnC') {
             if (correctAnswer === 2) {
-                sentMessage.edit('right answer');
+                addPoints.run(user.points + 1, message.user.id)
+                sentMessage.edit('Correct Answer');
               }else{
                 sentMessage.edit('wrong answer');
               }
         }
         if (component.customId === 'btnD') {
             if (correctAnswer === 3) {
-                sentMessage.edit('right answer');
+                addPoints.run(user.points + 1, message.user.id)
+                sentMessage.edit('Correct Answer');
               }else{
                 sentMessage.edit('wrong answer');
               }
@@ -192,13 +195,16 @@ client.on("interactionCreate", async message => {
         let quizId = message.options.getNumber("id");
 
         const getQuiz = sql.prepare("SELECT * FROM quiz WHERE uniqueId = ?");
+        // Gets quiz from database with selected ID number
         let quiz = getQuiz.get(quizId);
+        // Reads quiz data from its .yml file
         const fileContents = fs.readFileSync(quiz.quizName.concat('.yml'), 'utf-8');
-        const doc = yaml.load(fileContents);
+        // Loads quiz .yml file data into a custom object type
+        const yamlFile = yaml.load(fileContents);
 
-        numOfQuizLeft = doc[0].numberOfQuestions
+        numOfQuizLeft = yamlFile[0].numberOfQuestions
         startQuiz(message, quizId, numOfQuizLeft)
-        
+        message.reply("Starting quiz: " + quiz.quizName)
         
 
     }
@@ -235,7 +241,7 @@ client.on("interactionCreate", async message => {
             
             // Setup each SQL statement we will be using
             const insertQuiz = sql.prepare("INSERT INTO quiz (quizName, quizOwner) VALUES (?, ?);");
-            const insertUser = sql.prepare("INSERT OR REPLACE INTO users (userId, numberOfQuizCreated) VALUES (?, ?);");
+            const insertUser = sql.prepare("INSERT OR REPLACE INTO users (userId, nickName, numberOfQuizCreated) VALUES (?, ?, ?);");
             const getUser = sql.prepare("SELECT * FROM users WHERE userId = ?");
             const getQuiz = sql.prepare("SELECT * FROM quiz WHERE quizName = ?");
 
@@ -247,11 +253,11 @@ client.on("interactionCreate", async message => {
 
             // If the user does not exist in the database, add them to it
             if (!user) {
-                user = { userId: message.user.id, numberOfQuizCreated: 0}
+                user = { userId: message.user.id, nickName: message.user.tag, numberOfQuizCreated: 0, points: 0}
             }
 
             // Update users table with number of quizs created + 1
-            insertUser.run(message.user.id, user.numberOfQuizCreated += 1)
+            insertUser.run(message.user.id, message.user.tag, user.numberOfQuizCreated += 1)
 
             let getQuizID = getQuiz.get(quizNameClean)
             message.reply("Your quiz: " + quizNameClean + " was successfully uploaded!" + ` Your quiz ID is: ${getQuizID.uniqueID}`);
@@ -260,6 +266,29 @@ client.on("interactionCreate", async message => {
 
         
 
+    }
+
+    if (message.commandName === "generategraph"){
+        const getTopUsers = sql.prepare("SELECT * FROM users ORDER BY points DESC LIMIT 10");
+        let top3 = getTopUsers.all();
+    
+        
+        const chart = new QuickChart();
+        chart.setWidth(800)
+        chart.setHeight(400);
+    
+        chart.setConfig({
+            type: 'bar',
+            data: { labels: [top3[0].nickName, top3[1].nickName, top3[2].nickName], 
+            datasets: [{ label: 'Points', data: [top3[0].points, top3[1].points, top3[2].points] }] },
+          })
+          
+          
+        
+        // Print the chart URL
+        const url = await chart.getShortUrl();
+        message.reply(`Top 3 users by point value: ${url}`)
+        
     }
 });
 

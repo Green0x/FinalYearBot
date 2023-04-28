@@ -26,7 +26,8 @@ const commands = [
 							.addUserOption(user =>
 								user.setName("username")
 									.setRequired(true)
-									.setDescription("Which users quizzes do you want to see")),								
+									.setDescription("Which users quizzes do you want to see")),
+	new SlashCommandBuilder().setName('generategraph').setDescription('Generates a graph of users points')								
 						
 ]
 	.map(command => command.toJSON());
