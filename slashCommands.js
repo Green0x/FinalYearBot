@@ -27,7 +27,33 @@ const commands = [
 								user.setName("username")
 									.setRequired(true)
 									.setDescription("Which users quizzes do you want to see")),
-	new SlashCommandBuilder().setName('generategraph').setDescription('Generates a graph of users points')								
+	new SlashCommandBuilder().setName('generategraph').setDescription('Generates a graph of users points')
+							.addStringOption(option => 
+								option.setName("users")
+								.setDescription("How many users do you want to display in the graph")
+								.setRequired(true)
+								.addChoices(
+									{ name: "top3", value: "top3" },
+									{ name: "top5", value: "top5" },
+									{ name: "top10", value: "top10" },
+								)),
+	new SlashCommandBuilder().setName('checkpoints').setDescription('Displays your current points'),
+	new SlashCommandBuilder().setName('editquiz').setDescription('Edits your own quiz or edit another users quiz as an Admin')
+							.addNumberOption(quizid =>
+								quizid.setName("id")
+									.setDescription("Quiz ID")
+									.setRequired(true))
+							.addStringOption(option =>
+								option.setName("type")
+									.setDescription("Are you requesting an edit, or submitting a finished edit")
+									.setRequired(true)
+									.addChoices(
+										{ name: "request", value: "request"},
+										{ name: "submit", value: "submit"},
+									))
+							.addAttachmentOption(attach =>
+								attach.setName("quizfile")
+									.setDescription("Upload your edited file here"))								
 						
 ]
 	.map(command => command.toJSON());

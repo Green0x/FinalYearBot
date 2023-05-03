@@ -8,6 +8,8 @@ npm install discord.js
 
 npm install better-sqlite3
 
+npm install quickchart-js
+
 Change secret.json to your server
 > Token = Your secret token when you add a bot on your discord developer portal 
 > ClientID = Discord developer portal -> General info -> Application ID
