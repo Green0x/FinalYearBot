@@ -1,4 +1,4 @@
 {
-  "botVersion": "0.1"
-  
+  "botVersion": "0.1",
+  "trustedRole": "Admin" 
 }

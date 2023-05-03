@@ -104,13 +104,23 @@ function startQuiz(message, quizId, numOfQuizLeft) {
     
         
 }
-
+let editedQuizId = 0;
 // Check for command inputs
 client.on("interactionCreate", async message => {
     if (message.commandName === "ping") {
-
+        console.log(editedQuizId)
         message.reply("Pong!");
 
+    }
+
+    if (message.commandName === "checkpoints") {
+        const getUser = sql.prepare("SELECT * FROM users WHERE userId = ?");
+        let user = getUser.get(message.user.id);
+        try{
+            message.reply(`You have ${user.points} points`);
+        }catch (error){
+            message.reply("You have 0 points")
+        }
     }
 	
 
@@ -253,11 +263,11 @@ client.on("interactionCreate", async message => {
 
             // If the user does not exist in the database, add them to it
             if (!user) {
-                user = { userId: message.user.id, nickName: message.user.tag, numberOfQuizCreated: 0, points: 0}
+                user = { userId: message.user.id, nickName: message.user.username, numberOfQuizCreated: 0, points: 0}
             }
 
             // Update users table with number of quizs created + 1
-            insertUser.run(message.user.id, message.user.tag, user.numberOfQuizCreated += 1)
+            insertUser.run(message.user.id, message.user.username, user.numberOfQuizCreated += 1)
 
             let getQuizID = getQuiz.get(quizNameClean)
             message.reply("Your quiz: " + quizNameClean + " was successfully uploaded!" + ` Your quiz ID is: ${getQuizID.uniqueID}`);
@@ -269,27 +279,92 @@ client.on("interactionCreate", async message => {
     }
 
     if (message.commandName === "generategraph"){
+        let numOfUsersToGraph = message.options.getString("users")
         const getTopUsers = sql.prepare("SELECT * FROM users ORDER BY points DESC LIMIT 10");
-        let top3 = getTopUsers.all();
-    
+        let topUsers = getTopUsers.all();
+        
         
         const chart = new QuickChart();
         chart.setWidth(800)
-        chart.setHeight(400);
-    
-        chart.setConfig({
-            type: 'bar',
-            data: { labels: [top3[0].nickName, top3[1].nickName, top3[2].nickName], 
-            datasets: [{ label: 'Points', data: [top3[0].points, top3[1].points, top3[2].points] }] },
-          })
-          
-          
-        
-        // Print the chart URL
-        const url = await chart.getShortUrl();
-        message.reply(`Top 3 users by point value: ${url}`)
+        chart.setHeight(800);
+        try {
+            if (numOfUsersToGraph === "top3") {
+                chart.setConfig({
+                    type: 'bar',
+                    data: { labels: [topUsers[0].nickName, topUsers[1].nickName, topUsers[2].nickName], 
+                    datasets: [{ label: 'Points', data: [topUsers[0].points, topUsers[1].points, topUsers[2].points] }] },
+                  })
+                  // Print the chart URL
+                const url = await chart.getShortUrl();
+                message.reply(`Top 3 users by point value: ${url}`)
+            }
+            if (numOfUsersToGraph === "top5") {
+                chart.setConfig({
+                    type: 'bar',
+                    data: { labels: [topUsers[0].nickName, topUsers[1].nickName, topUsers[2].nickName, topUsers[3].nickName, topUsers[4].nickName], 
+                    datasets: [{ label: 'Points', data: [topUsers[0].points, topUsers[1].points, topUsers[2].points, topUsers[3].points, topUsers[4].points] }] },
+                  })
+                  // Print the chart URL
+                const url = await chart.getShortUrl();
+                message.reply(`Top 5 users by point value: ${url}`)
+            }
+            if (numOfUsersToGraph === "top10"){
+                chart.setConfig({
+                    type: 'bar',
+                    data: { labels: [topUsers[0].nickName, topUsers[1].nickName, topUsers[2].nickName, topUsers[3].nickName, topUsers[4].nickName, topUsers[5].nickName
+                        , topUsers[6].nickName, topUsers[7].nickName, topUsers[8].nickName, topUsers[9].nickName], 
+                    datasets: [{ label: 'Points', data: [topUsers[0].points, topUsers[1].points, topUsers[2].points, topUsers[3].points, topUsers[4].points
+                    , topUsers[5].points, topUsers[6].points, topUsers[7].points, topUsers[8].points, topUsers[9].points] }] },
+                  })
+                  // Print the chart URL
+                const url = await chart.getShortUrl();
+                message.reply(`Top 10 users by point value: ${url}`)
+            }
+        } catch {
+            message.reply("Error, not enough registered students")
+        }
+         
+    }
+
+    if (message.commandName === "editquiz") {
+        let quizId = message.options.getNumber("id");
+        let submitOrRequest = message.options.getString("type")
+        let editedQuiz = message.options.getAttachment("quizfile")
+        const getQuiz = sql.prepare("SELECT * FROM quiz WHERE uniqueID = ?");
+        let quiz = getQuiz.get(quizId);
+
+        if (submitOrRequest === "request") {
+            if (quiz.quizOwner === message.user.id || message.member.roles.cache.some(role => role.name === config.trustedRole)) {          
+                message.reply({content: "Here is the requested quiz file. Please download and make your edits, then submit it with the /editquiz submit command", files: [quiz.quizName.concat('.yml')], ephemeral: true})
+            }
+            else{
+                message.reply("You do not have permission to edit this quiz")
+            }
+        }
+        if (submitOrRequest === "submit"){
+            if (quiz.quizOwner === message.user.id || message.member.roles.cache.some(role => role.name === config.trustedRole)) {          
+                const file = fs.createWriteStream(quiz.quizName.concat('.yml'));
+                const request = https.get(editedQuiz.url, function(response) {
+                response.pipe(file); // Stream the data into our file
+
+                file.on("finish", () => { 
+                    file.close(); // Once file is downloaded we close it
+                });
+
+                message.reply("Your quiz has been successfully edited!")
+            });
+            }
+            else{
+                message.reply("You do not have permission to edit this quiz")
+            }
+            
+            
+        }
         
     }
+
+
+
 });
 
 
