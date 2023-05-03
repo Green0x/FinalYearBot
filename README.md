@@ -2,7 +2,11 @@
 This is the repository of my Final Year Project Discord bot.
 
 ## Setup instructions
-npm init  
+What are the dependancies? NODE?
+
+```bash
+npm init
+```
 
 npm install discord.js  
 
