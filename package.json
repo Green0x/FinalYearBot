@@ -20,5 +20,9 @@
     "env": {
       "browser": true
     }
+  },
+  "devDependencies": {
+    "eslint": "^8.39.0",
+    "eslint-config-portsoc": "^1.0.1"
   }
 }
