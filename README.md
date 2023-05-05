@@ -25,7 +25,9 @@ npm install js-yaml
 
 Change secret.json to your server information
 > Token = Your bot's secret token on the Developer portal
+
 > ClientID = Discord developer portal -> General info -> Application ID
+
 > GuildID = Enable developer mode in discord client -> Right click your server and copy ID
 
 ```bash
