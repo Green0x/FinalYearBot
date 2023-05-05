@@ -1,0 +1,27 @@
+- numberOfQuestions: 3  # This value needs to be set to the amount of questions you have in this file
+
+- question: "What type of system is the Stack?" # This is your question title
+  choices:  # These are the multiple choice answers. Only 4 choices are accepted 
+    - "FIFO"
+    - "LIFO"
+    - "FOFI"
+    - "LOFI"
+  answer: 2 # This is the number reffering to whichever choice is the correct answer (values start at 1 not 0)
+
+- question: "Which of these is a type of data structure"
+  choices:
+    - "Pascal"
+    - ".Exe file"
+    - "Linked list"
+    - ".Png file"
+  answer: 3
+
+- question: "What animal is python named after"
+  choices:
+    - "Crab"
+    - "Snake"
+    - "Elephant"
+    - "Duck"
+  answer: 2
+  image: "https://www.python.org/static/community_logos/python-logo-master-v3-TM.png" # If you would like an image to go with your questions, add an additional "image" tag below the "answer" tag. Discord only supports .png and .jpg 
+# If you wish to add more questions simply delete this comment and copy the syntax from the question above. Make sure to update the numberOfQuestions accordingly

@@ -12,7 +12,7 @@ function editQuiz(message, quizId, submitOrRequest, editedQuiz) {
     if (quiz.quizOwner === message.user.id || message.member.roles.cache.some(role => role.name === config.trustedRole)) {
       message.reply({
         content: 'Here is the requested quiz file. Please download and make your edits, then submit it with the /editquiz submit command',
-        files: [quiz.quizName.concat('.yml')],
+        files: ['./questions/' + quiz.quizName.concat('.yml')],
         ephemeral: true,
       });
     } else {
@@ -21,7 +21,7 @@ function editQuiz(message, quizId, submitOrRequest, editedQuiz) {
   }
   if (submitOrRequest === 'submit') {
     if (quiz.quizOwner === message.user.id || message.member.roles.cache.some(role => role.name === config.trustedRole)) {
-      const file = fs.createWriteStream(quiz.quizName.concat('.yml'));
+      const file = fs.createWriteStream('./questions/' + quiz.quizName.concat('.yml'));
       https.get(editedQuiz.url, function (response) {
         response.pipe(file); // Stream the data into our file
 

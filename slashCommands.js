@@ -3,7 +3,7 @@ const { REST } = require('@discordjs/rest');
 const { clientId, guildId } = require('./secret.json');
 const { token } = require('./secret.json');
 
-
+// Command skeleton creation
 const commands = [
   new SlashCommandBuilder().setName('ping').setDescription('Pong!'),
   new SlashCommandBuilder().setName('embedtest').setDescription('tets'),
@@ -58,6 +58,7 @@ const commands = [
       quizId.setName('quizid')
         .setDescription('Quiz ID')
         .setRequired(true)),
+  new SlashCommandBuilder().setName('downloadtemplate').setDescription('Downloads the quiz template'),
 ]
   .map(command => command.toJSON());
 

@@ -6,6 +6,7 @@ const sql = new SQLite('./database.sqlite');
 const fs = require('fs');
 
 // Local file imports
+const config = require('./config.json');
 const db = require('./databaseInit');
 const quizMain = require('./quizMain');
 const quizUpload = require('./quizUpload');
@@ -87,10 +88,11 @@ client.on('interactionCreate', async message => {
 
     const getQuiz = sql.prepare('SELECT * FROM quiz WHERE uniqueId = ?'); // Gets quiz from database with selected ID number
     const quiz = getQuiz.get(quizId);
-    const fileContents = fs.readFileSync(quiz.quizName.concat('.yml'), 'utf-8'); // Reads quiz data from its .yml file
-    const yamlFile = yaml.load(fileContents); // Loads quiz .yml file data into a custom object type
+
 
     try {
+      const fileContents = fs.readFileSync('./questions/' + quiz.quizName.concat('.yml'), 'utf-8'); // Reads quiz data from its .yml file
+      const yamlFile = yaml.load(fileContents); // Loads quiz .yml file data into a custom object type
       let numOfQuizLeft = 0;
       numOfQuizLeft = yamlFile[0].numberOfQuestions; // Sets number of quiz questions, so bot knows when to stop
       await quizMain.startQuiz(message, quizId, numOfQuizLeft);
@@ -124,9 +126,37 @@ client.on('interactionCreate', async message => {
   }
 
   if (message.commandName === 'deletequiz') {
-    const quizId = message.options.getString('quizId');
-    // do stuff
-    message.reply('yo');
+    const quizId = message.options.getString('quizid');
+
+    const getUser = sql.prepare('SELECT * FROM users WHERE userId = ?');
+    const getQuiz = sql.prepare('SELECT * FROM quiz WHERE uniqueID = ?');
+    const removeQuiz = sql.prepare('UPDATE users SET numberOfQuizCreated = ? WHERE userId = ?');
+    const deleteQuizRow = sql.prepare('DELETE FROM quiz WHERE uniqueID = ?');
+    try {
+      const quiz = getQuiz.get(quizId);
+      const user = getUser.get(quiz.quizOwner);
+      if (quiz.quizOwner === message.user.id || message.member.roles.cache.some(role => role.name === config.trustedRole)) {
+        fs.unlinkSync('./questions/' + quiz.quizName.concat('.yml'));
+
+
+        removeQuiz.run(user.numberOfQuizCreated - 1, quiz.quizOwner);
+        deleteQuizRow.run(quizId);
+
+        message.reply('Quiz successfully deleted');
+      } else {
+        message.reply('Error: You do not have permission to delete that quiz');
+      }
+    } catch {
+      message.reply('Error: Invalid quiz ID');
+    }
+  }
+
+  if (message.commandName === 'downloadtemplate') {
+    await message.reply({
+      content: 'Here is the requested quiz template. Please use the upload command when you wish to create a quiz',
+      files: ['./questions/quizTemplate.yml'],
+      ephemeral: true,
+    });
   }
 
 
@@ -134,18 +164,25 @@ client.on('interactionCreate', async message => {
   if (message.isButton()) {
     // Get the button pressed
     const component = message.component;
-
+    const insertUser = sql.prepare('INSERT OR REPLACE INTO users (userId, nickName, numberOfQuizCreated, points) VALUES (?, ?, ?, ?);');
     // Get user data from database in order to add points
     const getUser = sql.prepare('SELECT * FROM users WHERE userId = ?');
     const addPoints = sql.prepare('UPDATE users SET points = ? WHERE userId = ?');
-    const user = getUser.get(message.user.id);
+    let user = getUser.get(message.user.id);
+
+    // If user does not exist in Database
+    if (!user) {
+      user = await { userId: message.user.id, nickName: message.user.username, numberOfQuizCreated: 0, points: 0 }; // Sets SQL object
+      insertUser.run(message.user.id, message.user.username, user.numberOfQuizCreated, user.points); // Add new user to DB
+    }
+
 
     // If chain to check for each button press
-    if (!global.buttonPressCollection.includes(message.user.id)) {
+    if (!global.buttonPressCollection.includes(message.user.id)) { // If user is in the button press collection, do not let them gain more points
       if (component.customId === 'btnA') {
         if (global.correctAnswer === 0) {
           await addPoints.run(user.points + 1, message.user.id); // Adds 1 point for correct answer
-          global.buttonPressCollection.push(message.user.id);
+          global.buttonPressCollection.push(message.user.id); // Adds user to button press collection
           await message.reply({ content: 'Correct Answer! You just gained 1 point', ephemeral: true });
         } else {
           await message.reply({ content: 'Wrong Answer.', ephemeral: true });

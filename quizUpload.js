@@ -9,26 +9,26 @@ function uploadQuiz(message, quizAttach, quizName) {
   const quizNameClean = quizName.replace(punctuation, '');
 
 
-  if (fs.existsSync(quizNameClean.concat('.yml'))) {
+  if (fs.existsSync('./questions/' + quizNameClean.concat('.yml'))) {
     console.log('Quiz is a duplicate. Sending error message...');
 
     message.reply('You cannot upload a quiz with the same name!');
   } else {
     console.log('Quiz is not a duplicate. Downloading...');
     // Creates dummy file with same name as quiz name
-    const file = fs.createWriteStream(quizNameClean.concat('.yml'));
+    const file = fs.createWriteStream('./questions/' + quizNameClean.concat('.yml'));
     https.get(quizAttach.url, function (response) {
       response.pipe(file); // Stream the data into our dummy file
 
       file.on('finish', () => {
         file.close(); // Once file is downloaded we close it
-        console.log(quizNameClean + '.yml, has been downloaded');
+        console.log('./questions/' + quizNameClean + '.yml, has been downloaded');
       });
     });
 
     // Setup each SQL statement we will be using
     const insertQuiz = sql.prepare('INSERT INTO quiz (quizName, quizOwner) VALUES (?, ?);');
-    const insertUser = sql.prepare('INSERT OR REPLACE INTO users (userId, nickName, numberOfQuizCreated) VALUES (?, ?, ?);');
+    const insertUser = sql.prepare('INSERT OR REPLACE INTO users (userId, nickName, numberOfQuizCreated, points) VALUES (?, ?, ?, ?);');
     const getUser = sql.prepare('SELECT * FROM users WHERE userId = ?');
     const getQuiz = sql.prepare('SELECT * FROM quiz WHERE quizName = ?');
 
@@ -44,7 +44,7 @@ function uploadQuiz(message, quizAttach, quizName) {
     }
 
     // Update users table with number of quizs created + 1
-    insertUser.run(message.user.id, message.user.username, user.numberOfQuizCreated += 1);
+    insertUser.run(message.user.id, message.user.username, user.numberOfQuizCreated += 1, user.points);
 
     const getQuizID = getQuiz.get(quizNameClean);
     message.reply('Your quiz: ' + quizNameClean + ' was successfully uploaded!' + ` Your quiz ID is: ${getQuizID.uniqueID}`);
