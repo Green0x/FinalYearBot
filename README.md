@@ -21,7 +21,9 @@ npm install quickchart-js
 ```bash
 npm install js-yaml
 ```
-> Follow this guide if you have not set up and added a Discord bot to your server before https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot
+> Follow this guide if you have not set up a Discord bot before https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot
+> Follow this guide if you have not added a Discord bot to your server before
+https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links
 
 Change secret.json to your server information
 <pre>
@@ -37,3 +39,22 @@ node slashCommands.js # if running for the first time
 ```bash
 node bot.js
 ```
+
+## Usage
+/downloadtemplate - Downloads the quiz template for editing
+
+/uploadquiz - Uploads your edited template with a name for the quiz
+
+/listquiz - Lists all your quizzes and their corresponding ID's
+
+/startquiz - Starts a quiz with your selected quiz ID from /listquiz
+
+/generategraph - Generates a graph of the top 3, top 5 and top 10 student point values (note will need multiple accounts to use this)
+
+/editquiz - Either requests a quiz to be edited, or submits an edited quiz, by ID
+
+/deletequiz - Deletes a quiz by id
+
+/checkpoints - Displays your points
+
+/ping - Ping the bot
